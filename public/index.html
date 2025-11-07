@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community DIY Connect</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">Community DIY Connect</div>
+            <div class="nav-menu" id="navMenu">
+                <a href="#" onclick="showHome()">Home</a>
+                <a href="#" onclick="showProjects()">Projects</a>
+                <a href="#" onclick="showEngineers()">Engineers</a>
+                <span id="authLinks">
+                    <a href="#" onclick="showLogin()">Login</a>
+                    <a href="#" onclick="showRegister()" class="btn-primary">Sign Up</a>
+                </span>
+                <span id="userLinks" style="display: none;">
+                    <a href="#" onclick="showDashboard()">Dashboard</a>
+                    <a href="#" onclick="showProfile()">Profile</a>
+                    <a href="#" onclick="logout()">Logout</a>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="mainContent">
+        <!-- Home Page -->
+        <div id="homePage" class="page">
+            <section class="hero">
+                <h1>Connecting DIY Engineers with Community Projects</h1>
+                <p>Passionate about building? Your community needs you!</p>
+                <div class="hero-buttons">
+                    <button onclick="showRegister('engineer')" class="btn-large btn-primary">I'm an Engineer</button>
+                    <button onclick="showRegister('community')" class="btn-large btn-secondary">I'm a Community</button>
+                </div>
+            </section>
+
+            <section class="features">
+                <div class="feature-card">
+                    <h3>For DIY Engineers</h3>
+                    <p>Find meaningful projects in your community. Use your skills to make a real difference.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>For Communities</h3>
+                    <p>Post projects and connect with skilled volunteers ready to help improve your community.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Make an Impact</h3>
+                    <p>From playgrounds to community gardens, every project makes life better for everyone.</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Projects Page -->
+        <div id="projectsPage" class="page" style="display: none;">
+            <div class="page-header">
+                <h2>Community Projects</h2>
+                <div id="createProjectBtn"></div>
+            </div>
+
+            <div class="filters">
+                <input type="text" id="searchLocation" placeholder="Search by location...">
+                <input type="text" id="searchSkills" placeholder="Search by skills...">
+                <select id="filterCategory">
+                    <option value="">All Categories</option>
+                    <option value="Construction">Construction</option>
+                    <option value="Accessibility">Accessibility</option>
+                    <option value="Landscaping">Landscaping</option>
+                    <option value="Renovation">Renovation</option>
+                    <option value="Other">Other</option>
+                </select>
+                <button onclick="loadProjects()" class="btn-primary">Search</button>
+            </div>
+
+            <div id="projectsList" class="projects-grid"></div>
+        </div>
+
+        <!-- Engineers Page -->
+        <div id="engineersPage" class="page" style="display: none;">
+            <div class="page-header">
+                <h2>DIY Engineers</h2>
+            </div>
+
+            <div class="filters">
+                <input type="text" id="searchEngineerLocation" placeholder="Search by location...">
+                <input type="text" id="searchEngineerSkills" placeholder="Search by skills...">
+                <button onclick="loadEngineers()" class="btn-primary">Search</button>
+            </div>
+
+            <div id="engineersList" class="engineers-grid"></div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboardPage" class="page" style="display: none;">
+            <div class="page-header">
+                <h2>My Dashboard</h2>
+            </div>
+            <div id="dashboardContent"></div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profilePage" class="page" style="display: none;">
+            <div class="page-header">
+                <h2>My Profile</h2>
+            </div>
+            <div id="profileContent"></div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="loginPage" class="page" style="display: none;">
+            <div class="auth-container">
+                <h2>Login</h2>
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn-primary btn-full">Login</button>
+                </form>
+                <p class="auth-footer">
+                    Don't have an account? <a href="#" onclick="showRegister()">Sign up</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <div id="registerPage" class="page" style="display: none;">
+            <div class="auth-container">
+                <h2>Create Account</h2>
+                <form id="registerForm" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>I am a:</label>
+                        <select name="userType" required onchange="toggleSkillsField(this.value)">
+                            <option value="">Select...</option>
+                            <option value="engineer">DIY Engineer</option>
+                            <option value="community">Community Organization</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Name / Organization Name</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" name="password" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" name="phone">
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" name="location" required placeholder="City, State">
+                    </div>
+                    <div class="form-group">
+                        <label>About</label>
+                        <textarea name="bio" rows="3"></textarea>
+                    </div>
+                    <div class="form-group" id="skillsField" style="display: none;">
+                        <label>Skills (comma-separated)</label>
+                        <input type="text" name="skills" placeholder="e.g., Carpentry, Plumbing, Electrical">
+                    </div>
+                    <button type="submit" class="btn-primary btn-full">Create Account</button>
+                </form>
+                <p class="auth-footer">
+                    Already have an account? <a href="#" onclick="showLogin()">Login</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="modalOverlay" class="modal-overlay" onclick="closeModal()"></div>
+    <div id="modalContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
