@@ -1,7 +1,7 @@
 {
-  "name": "community-diy-connect",
+  "name": "wrench",
   "version": "1.0.0",
-  "description": "Connect DIY engineers with community projects",
+  "description": "Wrench - Connect DIY engineers with community projects",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

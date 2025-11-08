@@ -38,7 +38,7 @@ async function startServer() {
 
     // Health check
     app.get('/api/health', (req, res) => {
-      res.json({ status: 'ok', message: 'Community DIY Connect API is running' });
+      res.json({ status: 'ok', message: 'Wrench API is running' });
     });
 
     // Serve frontend for all other routes
@@ -56,7 +56,7 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`
 ╔══════════════════════════════════════════════╗
-║   Community DIY Connect Server               ║
+║   🔧 Wrench Server                           ║
 ║   Running on http://localhost:${PORT}        ║
 ╚══════════════════════════════════════════════╝
       `);
