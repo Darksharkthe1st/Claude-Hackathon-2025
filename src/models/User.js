@@ -1,4 +1,4 @@
-const { db } = require('../config/database');
+const { prepare } = require('../config/database');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 
@@ -7,23 +7,33 @@ class User {
     const id = uuidv4();
     const hashedPassword = bcrypt.hashSync(password, 10);
 
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       INSERT INTO users (id, email, password, name, user_type, phone, location, bio, skills)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
-    stmt.run(id, email, hashedPassword, name, userType, phone, location, bio, skills);
+    stmt.run(
+      id,
+      email,
+      hashedPassword,
+      name,
+      userType,
+      phone || null,
+      location,
+      bio || null,
+      skills || null
+    );
 
     return this.findById(id);
   }
 
   static findById(id) {
-    const stmt = db.prepare('SELECT * FROM users WHERE id = ?');
+    const stmt = prepare('SELECT * FROM users WHERE id = ?');
     return stmt.get(id);
   }
 
   static findByEmail(email) {
-    const stmt = db.prepare('SELECT * FROM users WHERE email = ?');
+    const stmt = prepare('SELECT * FROM users WHERE email = ?');
     return stmt.get(email);
   }
 
@@ -41,7 +51,7 @@ class User {
       params.push(`%${filters.location}%`);
     }
 
-    const stmt = db.prepare(query);
+    const stmt = prepare(query);
     return stmt.all(...params);
   }
 
@@ -60,7 +70,7 @@ class User {
     if (fields.length === 0) return this.findById(id);
 
     values.push(id);
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       UPDATE users SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?
     `);
 
@@ -77,7 +87,7 @@ class User {
     if (!user) return null;
 
     if (user.user_type === 'engineer') {
-      const stmt = db.prepare(`
+      const stmt = prepare(`
         SELECT
           COUNT(*) as total_bids,
           SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as accepted_bids
@@ -85,7 +95,7 @@ class User {
       `);
       return stmt.get(userId);
     } else {
-      const stmt = db.prepare(`
+      const stmt = prepare(`
         SELECT
           COUNT(*) as total_projects,
           SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_projects

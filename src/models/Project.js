@@ -1,4 +1,4 @@
-const { db } = require('../config/database');
+const { prepare } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
 class Project {
@@ -8,7 +8,7 @@ class Project {
   }) {
     const id = uuidv4();
 
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       INSERT INTO projects
       (id, community_id, title, description, category, required_skills, location,
        budget_min, budget_max, timeline, image_url)
@@ -16,15 +16,24 @@ class Project {
     `);
 
     stmt.run(
-      id, communityId, title, description, category, requiredSkills,
-      location, budgetMin, budgetMax, timeline, imageUrl
+      id,
+      communityId,
+      title,
+      description,
+      category,
+      requiredSkills || null,
+      location,
+      budgetMin || null,
+      budgetMax || null,
+      timeline || null,
+      imageUrl || null
     );
 
     return this.findById(id);
   }
 
   static findById(id) {
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       SELECT p.*, u.name as community_name, u.email as community_email
       FROM projects p
       JOIN users u ON p.community_id = u.id
@@ -69,7 +78,7 @@ class Project {
 
     query += ' ORDER BY p.created_at DESC';
 
-    const stmt = db.prepare(query);
+    const stmt = prepare(query);
     return stmt.all(...params);
   }
 
@@ -91,7 +100,7 @@ class Project {
     if (fields.length === 0) return this.findById(id);
 
     values.push(id);
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       UPDATE projects SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?
     `);
 
@@ -100,12 +109,12 @@ class Project {
   }
 
   static delete(id) {
-    const stmt = db.prepare('DELETE FROM projects WHERE id = ?');
+    const stmt = prepare('DELETE FROM projects WHERE id = ?');
     return stmt.run(id);
   }
 
   static getBidCount(projectId) {
-    const stmt = db.prepare('SELECT COUNT(*) as count FROM bids WHERE project_id = ?');
+    const stmt = prepare('SELECT COUNT(*) as count FROM bids WHERE project_id = ?');
     return stmt.get(projectId).count;
   }
 }

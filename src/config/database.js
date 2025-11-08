@@ -1,16 +1,90 @@
-const Database = require('better-sqlite3');
+const initSqlJs = require('sql.js');
+const fs = require('fs');
 const path = require('path');
 
 const dbPath = process.env.DB_PATH || path.join(__dirname, '../../database.db');
-const db = new Database(dbPath);
+let db = null;
+let SQL = null;
 
-// Enable foreign keys
-db.pragma('foreign_keys = ON');
+// Initialize SQL.js
+async function initDb() {
+  SQL = await initSqlJs();
+
+  // Load existing database if it exists
+  if (fs.existsSync(dbPath)) {
+    const buffer = fs.readFileSync(dbPath);
+    db = new SQL.Database(buffer);
+  } else {
+    db = new SQL.Database();
+  }
+}
+
+// Save database to file
+function saveDatabase() {
+  if (db) {
+    const data = db.export();
+    const buffer = Buffer.from(data);
+    fs.writeFileSync(dbPath, buffer);
+  }
+}
+
+// Wrapper for prepare that works like better-sqlite3
+function prepare(sql) {
+  return {
+    run: (...params) => {
+      try {
+        db.run(sql, params);
+        saveDatabase();
+        return { changes: db.getRowsModified() };
+      } catch (error) {
+        throw error;
+      }
+    },
+    get: (...params) => {
+      try {
+        const stmt = db.prepare(sql);
+        stmt.bind(params);
+        if (stmt.step()) {
+          const row = stmt.getAsObject();
+          stmt.free();
+          return row;
+        }
+        stmt.free();
+        return undefined;
+      } catch (error) {
+        throw error;
+      }
+    },
+    all: (...params) => {
+      try {
+        const stmt = db.prepare(sql);
+        stmt.bind(params);
+        const results = [];
+        while (stmt.step()) {
+          results.push(stmt.getAsObject());
+        }
+        stmt.free();
+        return results;
+      } catch (error) {
+        throw error;
+      }
+    }
+  };
+}
+
+// Execute multiple SQL statements
+function exec(sql) {
+  db.run(sql);
+  saveDatabase();
+}
 
 // Initialize database schema
 function initializeDatabase() {
+  // Enable foreign keys
+  db.run('PRAGMA foreign_keys = ON');
+
   // Users table
-  db.exec(`
+  exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
@@ -28,7 +102,7 @@ function initializeDatabase() {
   `);
 
   // Projects table
-  db.exec(`
+  exec(`
     CREATE TABLE IF NOT EXISTS projects (
       id TEXT PRIMARY KEY,
       community_id TEXT NOT NULL,
@@ -49,7 +123,7 @@ function initializeDatabase() {
   `);
 
   // Bids table
-  db.exec(`
+  exec(`
     CREATE TABLE IF NOT EXISTS bids (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL,
@@ -66,7 +140,7 @@ function initializeDatabase() {
   `);
 
   // Messages table
-  db.exec(`
+  exec(`
     CREATE TABLE IF NOT EXISTS messages (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL,
@@ -81,7 +155,7 @@ function initializeDatabase() {
   `);
 
   // Reviews table
-  db.exec(`
+  exec(`
     CREATE TABLE IF NOT EXISTS reviews (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL,
@@ -99,4 +173,20 @@ function initializeDatabase() {
   console.log('Database initialized successfully');
 }
 
-module.exports = { db, initializeDatabase };
+// Close database
+function close() {
+  if (db) {
+    saveDatabase();
+    db.close();
+  }
+}
+
+module.exports = {
+  initDb,
+  prepare,
+  exec,
+  initializeDatabase,
+  saveDatabase,
+  close,
+  getDb: () => db
+};

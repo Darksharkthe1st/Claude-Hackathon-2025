@@ -1,22 +1,22 @@
-const { db } = require('../config/database');
+const { prepare } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
 class Bid {
   static create({ projectId, engineerId, proposedBudget, proposedTimeline, message }) {
     const id = uuidv4();
 
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       INSERT INTO bids (id, project_id, engineer_id, proposed_budget, proposed_timeline, message)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
 
-    stmt.run(id, projectId, engineerId, proposedBudget, proposedTimeline, message);
+    stmt.run(id, projectId, engineerId, proposedBudget, proposedTimeline, message || null);
 
     return this.findById(id);
   }
 
   static findById(id) {
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       SELECT b.*,
              u.name as engineer_name, u.email as engineer_email,
              u.skills as engineer_skills, u.location as engineer_location,
@@ -30,7 +30,7 @@ class Bid {
   }
 
   static findByProject(projectId) {
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       SELECT b.*,
              u.name as engineer_name, u.email as engineer_email,
              u.skills as engineer_skills, u.location as engineer_location
@@ -43,7 +43,7 @@ class Bid {
   }
 
   static findByEngineer(engineerId) {
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       SELECT b.*,
              p.title as project_title, p.description as project_description,
              p.location as project_location, p.status as project_status,
@@ -58,7 +58,7 @@ class Bid {
   }
 
   static updateStatus(id, status) {
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       UPDATE bids SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
     `);
     stmt.run(status, id);
@@ -67,7 +67,7 @@ class Bid {
     if (status === 'accepted') {
       const bid = this.findById(id);
       if (bid) {
-        const updateProject = db.prepare(`
+        const updateProject = prepare(`
           UPDATE projects SET status = 'in_progress' WHERE id = ?
         `);
         updateProject.run(bid.project_id);
@@ -78,7 +78,7 @@ class Bid {
   }
 
   static checkExisting(projectId, engineerId) {
-    const stmt = db.prepare(`
+    const stmt = prepare(`
       SELECT * FROM bids WHERE project_id = ? AND engineer_id = ?
     `);
     return stmt.get(projectId, engineerId);
